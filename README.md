@@ -29,9 +29,11 @@ At first, install any pre-requisites software and module
 * Check the path to python program
 * Wait for receiving some data
 
+# Configure
+
 # Results
 
 In your browser : http:// :1800/Worldmap
 
-![Map](Doc/ls1_map_Antibes_test5.jpg)
+![Map](Doc/LS1_map_Antibes_test5.jpg)
 
