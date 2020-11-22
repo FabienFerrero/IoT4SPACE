@@ -31,9 +31,21 @@ At first, install any pre-requisites software and module
 
 # Configure
 
+* Configure your node and application in TTN uplink node
+* The flow will save data from the node in a TXT file. You can change the name
+* The TXT file will be processed periodically by a python code. Node-red will run the python code as a system command. The code will write a CSV file.Check that the path is ok. In the python command, the first argument is the file to read, the second argument in the CSV file to write.
+* In the python script (ls1_write.py), you have to update TLE and your local coordinate
+* The last part of the Node-red code will periodically read and plot the CSV file. Uptade the CSV file name.
+
 # Results
 
-In your browser : http:// :1800/Worldmap
+In your browser : http://localhost:1800/Worldmap
 
 ![Map](https://github.com/FabienFerrero/IoT4SPACE/blob/master/doc/LS1_map_Antibes_test5.jpg)
+
+# Actual limitations
+
+* The code works only for one satellite
+* Need up to 1mn to populate the map
+* There is no possiblity to filter the results in term of node, date or pass
 
