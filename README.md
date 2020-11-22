@@ -35,5 +35,5 @@ At first, install any pre-requisites software and module
 
 In your browser : http:// :1800/Worldmap
 
-![Map](Doc/LS1_map_Antibes_test5.jpg)
+![Map](https://github.com/FabienFerrero/IoT4SPACE/blob/master/doc/LS1_map_Antibes_test5.jpg)
 
