@@ -37,6 +37,8 @@ At first, install any pre-requisites software and module
 * In the python script (ls1_write.py), you have to update TLE and your local coordinate
 * The last part of the Node-red code will periodically read and plot the CSV file. Uptade the CSV file name.
 
+![Map](https://github.com/FabienFerrero/IoT4SPACE/blob/master/doc/node-red.jpg)
+
 # Results
 
 In your browser : http://localhost:1800/Worldmap
