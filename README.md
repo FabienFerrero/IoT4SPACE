@@ -28,3 +28,10 @@ At first, install any pre-requisites software and module
 * Set your Device and Application ID
 * Check the path to python program
 * Wait for receiving some data
+
+# Results
+
+In your browser : http:// :1800/Worldmap
+
+![Map](Doc/ls1_map_Antibes_test5.jpg)
+
