@@ -50,4 +50,5 @@ In your browser : http://localhost:1800/Worldmap
 * The code works two satellites
 * Each pass on a day is registered in a map as a new layer. By default, layers are hided and have to be activated manually.
 * There is no possiblity to filter the results in term of node, date or pass
+* TLE need to be provdided manually
 
