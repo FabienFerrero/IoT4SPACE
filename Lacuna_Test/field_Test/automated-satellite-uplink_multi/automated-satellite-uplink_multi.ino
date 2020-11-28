@@ -49,8 +49,8 @@
 // Interval between satellite transmissions and number of messages
 // Full pass is ca 10 min within range 6 min
 // 
-#define INTERVAL 7       // 5 seconden tussen elk bericht
-#define NUMTX 60
+#define INTERVAL 10       // 5 seconden tussen elk bericht
+#define NUMTX 40
 //#define M6P              // If MP6 Ignore morning passes in period 3 .. 15 h
 
 // Sleep time between periodic GPS checks (and TTN updates)
@@ -70,18 +70,20 @@
 // #define DEBUGSLEEP   //Comment out for production
 
 // Define this to get the settings for the four test nodes, or leave it undefined to fill in your own settings in the #else block below
-#define LACUNA_TEST 8
+#define LACUNA_TEST 2
 
-#if LACUNA_TEST == 8
-// Do not modify
-static byte networkKey[] = { 0x76, 0x7B, 0xAF, 0xA3, 0xD6, 0x0E, 0x0E, 0xC4, 0x92, 0x8A, 0x69, 0x18, 0x5E, 0xE7, 0xA8, 0x4C };
-static byte appKey[] = { 0xCE, 0x1C, 0x3C, 0xA2, 0x01, 0x22, 0x49, 0x72, 0x82, 0xDE, 0x31, 0x94, 0x70, 0xCF, 0xAC, 0x19 };
-static byte deviceAddress[] = { 0x26, 0x01, 0x3F, 0x0B };
-#elif LACUNA_TEST == 1
+static byte seedoffset[] = { 0x00, 0x00, 0x00, 0x08 };
+
+#if LACUNA_TEST == 1
 // Do not modify
 static byte networkKey[] = {     0xB3, 0xB8, 0x9E, 0x4B, 0x54, 0xA0, 0x16, 0xFC, 0x5E, 0x1B, 0xDC, 0xFE, 0x12, 0x04, 0x2F, 0x1B};
 static byte appKey[] = {   0x4D, 0x93, 0xF6, 0x0A, 0x2E, 0x6B, 0xA7, 0x95, 0xA9, 0x79, 0x9E, 0xB5, 0x67, 0xB3, 0x46, 0x10};
 static byte deviceAddress[] = { 0x26, 0x01, 0x1B, 0x1A };
+#elif LACUNA_TEST == 2
+// Do not modify
+static byte networkKey[] = { 0xD9, 0xA7, 0x57, 0xD6, 0xF1, 0xED, 0x56, 0xA4, 0x90, 0xE5, 0xA3, 0xAA, 0x09, 0x8D, 0x78, 0x8A };
+static byte appKey[] = { 0xA3, 0xE0, 0xB9, 0x52, 0xE4, 0x6A, 0xB8, 0x20, 0xB3, 0x9D, 0xE4, 0xFC, 0xD2, 0x98, 0x76, 0x9E };
+static byte deviceAddress[] = { 0x26, 0x01, 0x1B, 0x9E };
 #elif LACUNA_TEST == 3
 // Do not modify
 static byte networkKey[] = { 0x75, 0xA3, 0x0E, 0xD2, 0xD0, 0xB7, 0xC7, 0xDA, 0x35, 0xC5, 0xE9, 0xE5, 0xD7, 0xFE, 0x28, 0xE5 };
@@ -102,6 +104,12 @@ static byte deviceAddress[] = { 0x26, 0x01, 0x3F, 0xCF };
 static byte networkKey[] = { 0x34, 0xDC, 0x1C, 0xED, 0x4C, 0x55, 0x8C, 0x26, 0xC0, 0xCA, 0x47, 0x9F, 0x6B, 0x84, 0xBD, 0x14};
 static byte appKey[] = { 0xE5, 0xCA, 0x9E, 0x66, 0x71, 0xFA, 0xB3, 0x87, 0xC6, 0xA6, 0xFA, 0x3A, 0xA9, 0x27, 0xE7, 0x38};
 static byte deviceAddress[] = { 0x26, 0x01, 0x38, 0x80 };
+elif LACUNA_TEST == 8
+// Do not modify
+static byte networkKey[] = { 0x76, 0x7B, 0xAF, 0xA3, 0xD6, 0x0E, 0x0E, 0xC4, 0x92, 0x8A, 0x69, 0x18, 0x5E, 0xE7, 0xA8, 0x4C };
+static byte appKey[] = { 0xCE, 0x1C, 0x3C, 0xA2, 0x01, 0x22, 0x49, 0x72, 0x82, 0xDE, 0x31, 0x94, 0x70, 0xCF, 0xAC, 0x19 };
+static byte deviceAddress[] = { 0x26, 0x01, 0x3F, 0x0B };
+
 #else
 ///////////////////////////////////
 // Fill in your own settings here
@@ -334,9 +342,17 @@ void setup() {
   txParams.power = TXPOWER;
   txParams.spreadingFactor = lsLoraSpreadingFactor_8;
 
+   // Update TLE
+  get_new_tle(&txParams);
+
   // Initialize satellite orbit data 
   LacunaSat.site(0,0,0);
   initialize_tle(1);   // start with initializing satellite 1
+
+
+// Look if seed are initialize with an original seed
+Serial.println(micros()+*((uint32_t*)seedoffset));
+
 
   
 
@@ -420,7 +436,7 @@ void loop() {
           
           // Use the GPS fix time since startup combined with deviceAddress as a crude
           // random seed, to prevent nearby nodes from using the same hopping pattern at the same time.
-          randomSeed(micros()+*((uint32_t*)deviceAddress));
+          randomSeed(micros()+*((uint32_t*)seedoffset));
         }
 
         for (uint8_t i=0; i < 3; ++i) {
@@ -451,6 +467,12 @@ void loop() {
       int lora_result = lsSendLoraWAN(&loraWANParams, &txParams, (byte *)payload, payloadLength);
       Serial.print("Result: ");
       Serial.println(lsErrorToString(lora_result));
+
+
+      // Update TLE if needed
+      if (tle_age > 15) {
+        get_new_tle(&txParams);
+      }
       
       digitalWrite(PIN_SPI1_MOSI, LOW);  // Switch off Relay
       delay(100) ;                        // Wait for stable contact
@@ -475,17 +497,17 @@ void loop() {
       
       Serial.println("Transmit");
       
-//  Rotate antenna's on framecounter  
-      framecounter = loraWANParams.framecounter ;  // Read LoraWANframecounter
-      Serial.print("Current framcount = ");
-      Serial.println(framecounter);
-      antenna = 0;
-      if ( (framecounter % 2) == 1 ){
-        digitalWrite(PIN_SPI1_MOSI, HIGH);  // Switch on Relay
-        delay(100) ;                        // Wait for stable contact
-        Serial.println("Select external Antenna");
-        antenna = DUT;
-      }
+////  Rotate antenna's on framecounter  
+//      framecounter = loraWANParams.framecounter ;  // Read LoraWANframecounter
+//      Serial.print("Current framcount = ");
+//      Serial.println(framecounter);
+//      antenna = 0;
+//      if ( (framecounter % 2) == 1 ){
+//        digitalWrite(PIN_SPI1_MOSI, HIGH);  // Switch on Relay
+//        delay(100) ;                        // Wait for stable contact
+//        Serial.println("Select external Antenna");
+//        antenna = DUT;
+//      }
  /*
     //Use only External antanna for SAT transmission 
       digitalWrite(PIN_SPI1_MOSI, HIGH);  // Switch on Relay
@@ -493,6 +515,12 @@ void loop() {
       Serial.println("Select external Antenna");
       antenna = DUT;
  */         
+      
+      // Use the GPS fix time since startup combined with deviceAddress as a crude
+          // random seed, to prevent nearby nodes from using the same hopping pattern at the same time.
+          randomSeed(micros()+*((uint32_t*)seedoffset));
+      
+      
       generateMessage(nextsat);
       Serial.println("Sending LoraSat message");
       int sat_result = lsSendLoraSatWAN(&loraWANParams, &SattxParams, (byte *)payload, payloadLength);
@@ -664,20 +692,48 @@ void generateMessage(uint8_t satellite) {
 void initialize_tle(uint8_t satnumber) {
 
   Serial.println("Initialize TLE");
+
+  char tle_buf1[69];
+  char tle_buf2[69];
+
+  
  // TLE data sat1                  
   char tle_ls1_1[] = "1 44109U 19018AF  20328.91425974 +.00004997 +00000-0 +15809-3 0  9998";
   char tle_ls1_2[] = "2 44109 097.4496 039.1443 0057749 006.4400 353.7571 15.31610125091982"; 
   
  // TLE data sat2                   
   char tle_ls2d_1[] = "1 46492U 20068G   20329.25095194 +.00000475 +00000-0 +39232-4 0  9991";
-  char tle_ls2d_2[] = "2 46492 097.6733 262.2449 0020045 051.8117 308.4967 15.03508808008503";               
+  char tle_ls2d_2[] = "2 46492 097.6733 262.2449 0020045 051.8117 308.4967 15.03508808008503";   
+
+  
+              
 
   switch (satnumber) {
      case 1:  
      LacunaSat.init(satname,tle_ls1_1,tle_ls1_2);     //initialize satellite parameters from firmware
      break;
-     case 2:  
+     case 2:
+     EEPROM.get(0,tle_buf1);
+     EEPROM.get(69,tle_buf2);
+     if (twolineChecksum(tle_buf1) && twolineChecksum(tle_buf2)) {
+     Serial.println("  EEPROM TLE checksum ok");
+     } else {
+     Serial.println("  EEPROM TLE checksum failed");
+     }
+     char tempstr[12];
+     memcpy( tempstr, &tle_buf1[18] , 5); tempstr[5] = '\0'; uint16_t bufepoch = atoi(tempstr);
+     memcpy( tempstr, &tle_ls2d_1[18] , 5); tempstr[5] = '\0'; uint16_t firmepoch = atof(tempstr);
+    Serial.print("  TLE EEPROM epoch: ");
+    Serial.println(bufepoch);
+    Serial.print("  TLE firmware epoch: ");
+    Serial.println(firmepoch);
+    if (twolineChecksum(tle_buf1) && twolineChecksum(tle_buf2) && bufepoch>firmepoch) {
+     Serial.println("  Use EEPROM TLE");
+     LacunaSat.init(satname,tle_buf1,tle_buf2);     //initialize satellite parameters from EEPROM
+    } else {
+     Serial.println("  Use firmware TLE");
      LacunaSat.init(satname,tle_ls2d_1,tle_ls2d_2);     //initialize satellite parameters from firmware
+    }    
      break;
   }
   tle_epoch = getUnixFromJulian(LacunaSat.satrec.jdsatepoch);
@@ -904,3 +960,61 @@ uint32_t UnixToDhhmmss(uint32_t unixtime) {
       seconds = uint32_t(unixtime - days*86400 - hours*3600 - minutes*60);        // Calculate seconds
      return(days*1000000+hours*10000+minutes*100+seconds);                        // Return dddhhmmss
     }   
+
+  
+  
+  void get_new_tle(lsLoraTxParams *TLEtxParams) {
+
+  // lacuna-tle-update generic-device keys
+  byte networkKey[] = { 0xA4, 0x81, 0x98, 0xCD, 0x28, 0xEB, 0x31, 0x3F, 0xC9, 0x27, 0x21, 0xDE, 0x59, 0x4E, 0x40, 0x67 };
+  byte appKey[] = { 0xD7, 0xD4, 0xD6, 0xF9, 0xC8, 0x62, 0xB2, 0x10, 0x32, 0x1A, 0x39, 0xC9, 0x76, 0x80, 0xAA, 0x2F };
+  byte deviceAddress[] = { 0x26, 0x01, 0x1B, 0xDB };
+
+  lsLoraWANParams TLEloraWANParams;
+ 
+  // LoRaWAN session parameters
+  lsCreateDefaultLoraWANParams(&TLEloraWANParams, networkKey, appKey, deviceAddress);
+  TLEloraWANParams.txPort = 1;
+  TLEloraWANParams.rxEnable = true;
+
+  uint32_t uid[3];
+  STM32.getUID(uid);
+  uint32_t ls_devid = crc32b((uint8_t*)uid);
+ 
+  char tlepayload[255];
+  char tle_buf1[69];
+  char tle_buf2[69];
+
+  memcpy(tlepayload, &tle_epoch , 4);
+  memcpy(tlepayload+4, &ls_devid , 4);
+  
+  int result = lsSendLoraWAN(&TLEloraWANParams, TLEtxParams, (byte *)tlepayload, 8);
+  Serial.print("TTN uplink result: ");
+  Serial.println(lsErrorToString(result));
+
+  if (TLEloraWANParams.rxpayloadLength) {    
+    if (TLEloraWANParams.rxpayloadLength == 138) {
+      Serial.println("  Received TLE via The Things Network");     
+      for (uint8_t n = 0; n < 69; n++)
+        {
+          tle_buf1[n] = tlepayload[n];
+          tle_buf2[n] = tlepayload[n+69];
+        }
+      if (twolineChecksum(tle_buf1) && twolineChecksum(tle_buf2)) {
+         Serial.println("  Update TLE and write to EEPROM");
+         //initialize satellite parameters with new TLE 
+         LacunaSat.init(satname,tle_buf1,tle_buf2);
+         tle_epoch = getUnixFromJulian(LacunaSat.satrec.jdsatepoch);
+         // Write TLE to EEPROM
+         EEPROM.put(0,tle_buf1);
+         EEPROM.put(69,tle_buf2);
+       } else { 
+         Serial.println("  Checksum failed, invalid TLE"); 
+       }
+    } else {
+      Serial.println("  No TLE received");
+    } 
+  } else {
+      Serial.println("  No TLE downlink received");
+  }
+}
