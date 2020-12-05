@@ -50,7 +50,7 @@ In your browser : http://localhost:1800/Worldmap
 # Main features
 * Store TLE for satellite every day
 * Store received packet from a node for terrestrial and satellite communication with associate time and RSSI
-* Calculate for Satellite communication the satellite position, elevation and distance from the node
+* Calculate for each received packet the satellite position, elevation and distance from the node using the corresponding TLE (on daily basis)
 * Plot on node-red Worldmap the position of satellite for the different packet
 * Plot on node-red Worldmap the live position of satellite
 
