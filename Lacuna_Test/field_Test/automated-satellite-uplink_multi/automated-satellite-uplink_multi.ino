@@ -66,13 +66,16 @@
 #define GUARDTIME (FIXTIME+30)
 
 // Only use for testing
+
+// #define UPDATE // automatic TLE update
 // #define FAKEPASS
 // #define DEBUGSLEEP   //Comment out for production
+#define OFFSET 1000 // additional time offset to avoir interference for multiple device
 
 // Define this to get the settings for the four test nodes, or leave it undefined to fill in your own settings in the #else block below
-#define LACUNA_TEST 2
+#define LACUNA_TEST 4
 
-static byte seedoffset[] = { 0x00, 0x00, 0x00, 0x08 };
+
 
 #if LACUNA_TEST == 1
 // Do not modify
@@ -94,6 +97,11 @@ static byte deviceAddress[] = { 0x26, 0x01, 0x15, 0xEF };
 static byte networkKey[] = { 0x0A, 0xEB, 0x4B, 0xA6, 0x4E, 0xE2, 0xE9, 0xCC, 0xA1, 0xD3, 0x75, 0x18, 0x6E, 0xFE, 0xE1, 0x91};
 static byte appKey[] = { 0x29, 0x0F, 0x53, 0xE3, 0xC1, 0x60, 0x76, 0x2B, 0x73, 0xCD, 0x13, 0x86, 0xF5, 0x4E, 0xB7, 0x82};
 static byte deviceAddress[] = { 0x26, 0x01, 0x11, 0xE1 };
+#elif LACUNA_TEST == 5
+// Do not modify
+static byte networkKey[] = { 0x14, 0xC6, 0xA5, 0x48, 0x54, 0x49, 0x16, 0x99, 0xB7, 0x12, 0xFD, 0x16, 0x8A, 0x31, 0x3F, 0xE3 };
+static byte appKey[] = { 0x5F, 0x57, 0xDD, 0x2F, 0x13, 0x6A, 0x6A, 0x7B, 0x07, 0xF8, 0x4C, 0xC9, 0xDA, 0x35, 0xC6, 0x71 };
+static byte deviceAddress[] = { 0x26, 0x01, 0x16, 0xE1 };
 #elif LACUNA_TEST == 6
 // Do not modify
 static byte networkKey[] = { 0xB0, 0x55, 0xBF, 0x28, 0x6A, 0x02, 0x55, 0x46, 0xF8, 0x2D, 0x90, 0xC1, 0xD3, 0x29, 0x83, 0x28};
@@ -104,7 +112,7 @@ static byte deviceAddress[] = { 0x26, 0x01, 0x3F, 0xCF };
 static byte networkKey[] = { 0x34, 0xDC, 0x1C, 0xED, 0x4C, 0x55, 0x8C, 0x26, 0xC0, 0xCA, 0x47, 0x9F, 0x6B, 0x84, 0xBD, 0x14};
 static byte appKey[] = { 0xE5, 0xCA, 0x9E, 0x66, 0x71, 0xFA, 0xB3, 0x87, 0xC6, 0xA6, 0xFA, 0x3A, 0xA9, 0x27, 0xE7, 0x38};
 static byte deviceAddress[] = { 0x26, 0x01, 0x38, 0x80 };
-elif LACUNA_TEST == 8
+#elif LACUNA_TEST == 8
 // Do not modify
 static byte networkKey[] = { 0x76, 0x7B, 0xAF, 0xA3, 0xD6, 0x0E, 0x0E, 0xC4, 0x92, 0x8A, 0x69, 0x18, 0x5E, 0xE7, 0xA8, 0x4C };
 static byte appKey[] = { 0xCE, 0x1C, 0x3C, 0xA2, 0x01, 0x22, 0x49, 0x72, 0x82, 0xDE, 0x31, 0x94, 0x70, 0xCF, 0xAC, 0x19 };
@@ -342,19 +350,17 @@ void setup() {
   txParams.power = TXPOWER;
   txParams.spreadingFactor = lsLoraSpreadingFactor_8;
 
+
+#ifdef UPDATE
    // Update TLE
   get_new_tle(&txParams);
+ #endif
 
   // Initialize satellite orbit data 
   LacunaSat.site(0,0,0);
   initialize_tle(1);   // start with initializing satellite 1
 
 
-// Look if seed are initialize with an original seed
-Serial.println(micros()+*((uint32_t*)seedoffset));
-
-
-  
 
 }
 
@@ -436,7 +442,7 @@ void loop() {
           
           // Use the GPS fix time since startup combined with deviceAddress as a crude
           // random seed, to prevent nearby nodes from using the same hopping pattern at the same time.
-          randomSeed(micros()+*((uint32_t*)seedoffset));
+          randomSeed(micros()+*((uint32_t*)deviceAddress));
         }
 
         for (uint8_t i=0; i < 3; ++i) {
@@ -470,7 +476,7 @@ void loop() {
 
 
       // Update TLE if needed
-      if (tle_age > 15) {
+      if (tle_age > 30) {
         get_new_tle(&txParams);
       }
       
@@ -480,6 +486,11 @@ void loop() {
   } else if (wakeupreason == 1) {
 
     Serial.println("satellite TX wakeup");
+
+#ifdef OFFSET
+    // Test additional delay to avoid inteference
+    delay ( OFFSET);
+#endif
  
     for (int numtx =0; numtx < txnumber; numtx++) {
       digitalWrite(LS_LED_BLUE, HIGH);       // Switch on LED
@@ -518,7 +529,7 @@ void loop() {
       
       // Use the GPS fix time since startup combined with deviceAddress as a crude
           // random seed, to prevent nearby nodes from using the same hopping pattern at the same time.
-          randomSeed(micros()+*((uint32_t*)seedoffset));
+          randomSeed(micros()+*((uint32_t*)deviceAddress));
       
       
       generateMessage(nextsat);
@@ -705,8 +716,7 @@ void initialize_tle(uint8_t satnumber) {
   char tle_ls2d_1[] = "1 46492U 20068G   20329.25095194 +.00000475 +00000-0 +39232-4 0  9991";
   char tle_ls2d_2[] = "2 46492 097.6733 262.2449 0020045 051.8117 308.4967 15.03508808008503";   
 
-  
-              
+               
 
   switch (satnumber) {
      case 1:  
