@@ -8,7 +8,7 @@ Be indulgent, report any issue and push any improvement.
 ## Contributors :
 * Fabien Ferrero
 
-Last update: 22/11/2020
+Last update: 5/12/2020
 
 ## Pre-requisites
 
@@ -33,9 +33,11 @@ At first, install any pre-requisites software and module
 
 * Configure your node and application in TTN uplink node
 * The flow will save data from the node in a TXT file. You can change the name
-* The TXT file will be processed periodically by a python code. Node-red will run the python code as a system command. The code will write a CSV file.Check that the path is ok. In the python command, the first argument is the file to read, the second argument in the CSV file to write.
-* In the python script (ls1_write.py), you have to update TLE and your local coordinate
-* The last part of the Node-red code will periodically read and plot the CSV file. Uptade the CSV file name.
+* Every day, Node-red will access to celestrak.com, and download latest TLE for LS1 and LS2D
+* The TXT file will be processed by a Python code once packet from satellite are received. Node-red will run the python code as a system command. The code will write a CSV file. Check that the path is ok. In the python command, the first argument is the file to read, the second argument in the CSV file to write.
+* In the python script (lsx_write_auto.py), you must update your home latitude and longitude
+* Each time a packet from sat is received, the CSV file with packets received and associated satellite position is updated. You may need to uptdate the CSV file name.
+* On the map, live position of LS1 and LS2D is updated each 30s.
 
 ![Map](https://github.com/FabienFerrero/IoT4SPACE/blob/master/doc/node-red.jpg)
 
@@ -45,10 +47,18 @@ In your browser : http://localhost:1800/Worldmap
 
 ![Map](https://github.com/FabienFerrero/IoT4SPACE/blob/master/doc/LS1_map_Antibes_test5.jpg)
 
+# Main features
+* Store TLE for satellite every day
+* Store received packet from a node for terrestrial and satellite communication with associate time and RSSI
+* Calculate for Satellite communication the satellite position, elevation and distance from the node
+* Plot on node-red Worldmap the position of satellite for the different packet
+* Plot on node-red Worldmap the live position of satellite
+
 # Actual limitations
 
-* The code works two satellites
-* Each pass on a day is registered in a map as a new layer. By default, layers are hided and have to be activated manually.
+* The code works with only two satellites (LS1 and LS2D)
+* Each pass on a day is registered in a map as a new layer. By default, layers are hided and have to be activated manually. You can activate all layer by clicking on the star button
 * There is no possiblity to filter the results in term of node, date or pass
-* TLE need to be provdided manually
+* RSSI versus elevation and range is not available as a graph
+
 
