@@ -37,7 +37,7 @@ At first, install any pre-requisites software and module
 * The TXT file will be processed by a Python code once packet from satellite are received. Node-red will run the python code as a system command. The code will write a CSV file. Check that the path is ok. In the python command, the first argument is the file to read, the second argument in the CSV file to write.
 * In the python script (lsx_write_auto.py), you must update your home latitude and longitude
 * Each time a packet from sat is received, the CSV file with packets received and associated satellite position is updated. You may need to uptdate the CSV file name.
-* On the map, live position of LS1 and LS2D is updated each 30s.
+* On the map, live position of LS1 and LS2D is updated every 30s.
 
 ![Map](https://github.com/FabienFerrero/IoT4SPACE/blob/master/doc/node-red.jpg)
 
