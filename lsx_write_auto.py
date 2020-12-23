@@ -18,8 +18,8 @@ sat1 = ephem.readtle('LS1',
 )
 
 sat2 = ephem.readtle('LS2D',
-    '1 46492U 20068G   20323.79362494 +.00000254 +00000-0 +23102-4 0  9998',
-    '2 46492 097.6735 256.8338 0020788 068.7862 291.5584 15.03504381007686'
+    '1 46492U 20068G   20357.56687409  .00000571  00000-0  46208-4 0  9990',
+    '2 46492  97.6795 290.3361 0017535 320.8338 212.9446 15.03596658 12753'
 )
 # ----------------------
 
@@ -32,6 +32,23 @@ path_LS2D = "LS2D_TLE.json"
 home.lon = '7.12'   # +E
 home.lat = '43.58'      # +N
 home.elevation = 10 # meters
+
+
+# Function to test if a string is a date
+from dateutil.parser import parse
+def is_date(string, fuzzy=False):
+    """
+    Return whether the string can be interpreted as a date.
+
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+    try: 
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
 
 
 # Function to format the date for piephem
@@ -88,10 +105,11 @@ def set_TLE(date, satnum):
         num_list = []
         TLE_ok=0
         path_sat=path_LS1
-        if (satnum == 1):
+        if (satnum == '1'):
                 path_sat=path_LS1
-        if (satnum ==2):
+        if (satnum =='2'):
                 path_sat=path_LS2D
+                #print(f'{satnum}')
         date = datetime.strptime(extract_day(date),'%Y/%m/%d') - timedelta(days=1) # set time one day before to limit error in table
         with open(path_sat, 'r') as fh:
             for line in fh:
@@ -104,15 +122,18 @@ def set_TLE(date, satnum):
                         TLE_ok=3
                         #print(f'{line}')
                 if TLE_ok == 1:
+                        TLE0=line
                         TLE_ok=2
                         #print(f'{line}')    
                 test_date = extract_day(line)
-                if test_date == '': line = 'no'
-                else :        
+                #print(f'{test_date}')
+                if is_date(test_date): 
                         if date <= datetime.strptime(test_date,'%Y/%m/%d'):    
                                 TLE_ok = 1
                                 #print(extract_day(line))
+                else : line = 'no'                        
         fh.close
+        return TLE0, TLE1, TLE2
 
 
 
@@ -132,15 +153,15 @@ with open(path) as csv_file:
                         sat_num = str(row[4])
                         #print(f'sat_num is {sat_num}')
                 if row[2] == 'eui-f01898219e90f018':
-                        set_TLE(str(row[0]),sat_num)
+                        TLE0, TLE1, TLE2 = set_TLE(str(row[0]),sat_num)
                         sat = ephem.readtle(TLE0, TLE1, TLE2)
                         home.date = format_date(str(row[0]))
                         day = extract_day(str(row[0]))
                         hour = extract_hour(str(row[0]))
-                        if sat_num == '1':
-                                sat = sat1
-                        else:
-                                sat = sat2      
+                        #if sat_num == '1':
+                        #        sat = sat1
+                        #else:
+                        #        sat = sat2      
                         sat.compute(home)
                         el = sat.alt * degrees_per_radian
                         az = sat.az * degrees_per_radian

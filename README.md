@@ -19,6 +19,8 @@ It requires :
 * and node-red-contrib-web-worldmap Modules in Node-red (https://flows.nodered.org/node/node-red-contrib-web-worldmap)
 * Python3 to be installed (https://www.python.org/download/releases/3.0/)
 * Piephem python library (https://pypi.org/project/pyephem/)
+* Time, Sys, CSV Python Library
+* Dateutil python library (https://pypi.org/project/python-dateutil/)
 
 # Install
 
