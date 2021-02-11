@@ -7,14 +7,17 @@ import sys
 degrees_per_radian = 180.0 / math.pi
 from math import degrees
 
+# Time offset in second : additional offset to understand LS2D shift toward north
+offset = 0;
+
 TLE0 = 'LS1'
 TLE1=  '1 44109U 19018AF  20327.47693938  .00004175  00000-0  13256-3 0  9997'
 TLE2=  '2 44109  97.4496  37.6999 0057930  11.5295 348.7258 15.31595990 91766'
 
 # setting the sat here is not anymore needed, will be suppressed later
 sat1 = ephem.readtle('LS1',
-    '1 44109U 19018AF  20327.47693938  .00004175  00000-0  13256-3 0  9997',
-    '2 44109  97.4496  37.6999 0057930  11.5295 348.7258 15.31595990 91766'
+    '1 44109U 19018AF  20358.44198174  .00004736  00000-0  14936-3 0  9999',
+    '2 44109  97.4465  68.8215 0055753 259.4428 100.0530 15.31861061 96505'
 )
 
 sat2 = ephem.readtle('LS2D',
@@ -28,6 +31,7 @@ path=str(sys.argv[1])
 path2 = str(sys.argv[2])
 path_LS1 = "LS1_TLE.json"
 path_LS2D = "LS2D_TLE.json"
+path_LS2C = "LS2C_TLE.json"
 
 home.lon = '7.12'   # +E
 home.lat = '43.58'      # +N
@@ -61,10 +65,14 @@ def format_date(date):
                         results += ' '
                 elif letter == 'Z':
                         results += '\''
+                elif letter == '.': # do not consider us
+                        #print (results)
+                        date = datetime.strptime(results,"%Y/%m/%d %H:%M:%S")
+                        date = date - timedelta(seconds=offset); # offset to compensate LD2D inaccuracy
+                        return date
                 else:
                         results += letter
-        #print (results)
-        return results
+        
 
 # Compute day from date provided by TTN
 def extract_day(date):
@@ -107,9 +115,11 @@ def set_TLE(date, satnum):
         path_sat=path_LS1
         if (satnum == '1'):
                 path_sat=path_LS1
-        if (satnum =='2'):
+        if (satnum =='2' or satnum =='4'):
                 path_sat=path_LS2D
                 #print(f'{satnum}')
+        if (satnum =='3'):
+                path_sat=path_LS2C
         date = datetime.strptime(extract_day(date),'%Y/%m/%d') - timedelta(days=1) # set time one day before to limit error in table
         with open(path_sat, 'r') as fh:
             for line in fh:
@@ -168,7 +178,25 @@ with open(path) as csv_file:
                         lat = degrees (sat.sublat)
                         lon = degrees (sat.sublong)
                         str2 = f'\t{home.date}   {el}   {sat.range}   {row[3]}   {sat_num}'
-                        str3 = f'\t{home.date},{day},{hour},{el},{az},{sat.range},{row[3]},{lat},{lon},{sat_num},{row[1]}'
+                        str3 = f'\t{home.date},{day},{hour},{el},{az},{sat.range},{row[3]},{lat},{lon},{sat_num},{row[1]}' # write Time, El, Az, Range, RSSI, lat, lon, cnt
+                        print(str2)
+                        str1.append(str3)
+                        # filout.write("{}\n".format(str1))
+                        line_count += 1
+                        line_sat += 1
+                if sat_num == '4':
+                        TLE0, TLE1, TLE2 = set_TLE(str(row[0]),"2") # we force to use ls2D TLE
+                        sat = ephem.readtle(TLE0, TLE1, TLE2)
+                        home.date = format_date(str(row[0]))
+                        day = extract_day(str(row[0]))
+                        hour = extract_hour(str(row[0]))
+                        sat.compute(home)
+                        el = sat.alt * degrees_per_radian
+                        az = sat.az * degrees_per_radian
+                        lat = degrees (sat.sublat)
+                        lon = degrees (sat.sublong)
+                        str2 = f'\t{home.date}   {el}   {sat.range}   {row[3]}   {sat_num}'
+                        str3 = f'\t{home.date},{day},{hour},{el},{az},{sat.range},{row[3]},{lat},{lon},{sat_num},{row[1]}' # write Time, El, Az, Range, RSSI, lat, lon, sat, cnt
                         print(str2)
                         str1.append(str3)
                         # filout.write("{}\n".format(str1))
