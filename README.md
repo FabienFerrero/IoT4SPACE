@@ -53,14 +53,13 @@ In your browser : http://localhost:1800/Worldmap
 * Store TLE for satellite every day
 * Store received packet from a node for terrestrial and satellite communication with associate time and RSSI
 * Calculate for each received packet the satellite position, elevation and distance from the node using the corresponding TLE (on daily basis)
-* Plot on node-red Worldmap the position of satellite for the different packet
+* Plot on node-red Worldmap the position of satellite for the different packets
 * Plot on node-red Worldmap the live position of satellite
 
 # Actual limitations
 
-* The code works with only two satellites (LS1 and LS2D)
 * Each pass on a day is registered in a map as a new layer. By default, layers are hided and have to be activated manually. You can activate all layer by clicking on the star button
 * There is no possiblity to filter the results in term of node, date or pass
-* RSSI versus elevation and range is not available as a graph
+
 
 
