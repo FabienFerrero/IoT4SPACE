@@ -32,6 +32,7 @@ path2 = str(sys.argv[2])
 path_LS1 = "LS1_TLE.json"
 path_LS2D = "LS2D_TLE.json"
 path_LS2C = "LS2C_TLE.json"
+path_LS2B = "LS2B_TLE.json"
 
 home.lon = '7.12'   # +E
 home.lat = '43.58'      # +N
@@ -120,6 +121,8 @@ def set_TLE(date, satnum):
                 #print(f'{satnum}')
         if (satnum =='3'):
                 path_sat=path_LS2C
+        if (satnum =='5'):
+                path_sat=path_LS2B
         date = datetime.strptime(extract_day(date),'%Y/%m/%d') - timedelta(days=1) # set time one day before to limit error in table
         with open(path_sat, 'r') as fh:
             for line in fh:
@@ -159,10 +162,11 @@ with open(path) as csv_file:
 	str1.append("Time,Day,Hour,Elevation,Azymuth,Range,RSSI,Latitude,Longitude,sat,cnt")
 	for row in csv_reader:
                 #print(f'Number of row is {len(row)} ')
-                if len(row)==5:
+                if len(row)>=5:
                         sat_num = str(row[4])
-                        #print(f'sat_num is {sat_num}')
+                        
                 if row[2] == 'eui-f01898219e90f018':
+                        #print(f'sat_num is {sat_num}')
                         TLE0, TLE1, TLE2 = set_TLE(str(row[0]),sat_num)
                         sat = ephem.readtle(TLE0, TLE1, TLE2)
                         home.date = format_date(str(row[0]))
